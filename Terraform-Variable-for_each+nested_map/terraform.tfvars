@@ -1,4 +1,4 @@
-rg = {
+abc = {
   rg1 = {
     rg_name     = "rg-sonu"
     rg_location = "eastus"
