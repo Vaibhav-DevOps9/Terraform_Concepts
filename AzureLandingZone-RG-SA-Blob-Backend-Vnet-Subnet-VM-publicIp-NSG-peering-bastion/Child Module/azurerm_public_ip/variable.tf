@@ -7,6 +7,17 @@ variable "pip" {
   }))
 }
 
+variable "lb_pip" {
+  description = "Public IP allocated to Load Balancer"
+  type = map(object({
+    lb_pip_name = string
+    rg_key   = string
+    vnet_key = string
+
+  }))
+  
+}
+
 ###################################################################
 
 variable "nic" {

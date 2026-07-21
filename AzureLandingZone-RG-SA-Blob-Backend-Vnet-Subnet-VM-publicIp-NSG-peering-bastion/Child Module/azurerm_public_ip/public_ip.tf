@@ -6,6 +6,14 @@ resource "azurerm_public_ip" "public_ip" {
   allocation_method   = "Static"
 }
 
+resource "azurerm_public_ip" "lb_ip" {
+  for_each = var.lb_pip
+  name                = each.value.lb_pip_name    #"PublicIPForLB"
+  location            = azurerm_virtual_network.vnet[each.value.vnet_key].location
+  resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
+  allocation_method   = "Static"
+}
+
 
 ##############################################################################################
 

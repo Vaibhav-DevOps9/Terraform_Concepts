@@ -1,15 +1,6 @@
 module "resource_group" {
   source = "../../child_modules/azurerm_resource_group"
-  rgs = {
-    rg1 = {
-      name       = "resource_group_dev_01_Canadacentral"
-      location   = "Canadacentral"
-      managed_by = "terraform1"
-      
-
-    }
-  }
-
+  rgs = var.parent_resource_group
 }
 
 module "storage_account" {
@@ -31,10 +22,18 @@ module "storage_account" {
 #     source = "../../child_modules/azurerm_blob_container"
 # }
 
-# module "virtual_network" {
-#     depends_on = [ module.resource_group ]
-#     source = "../../child_modules/azurerm_virtual_network"
-# }
+module "virtual_network" {
+    depends_on = [ module.resource_group ]
+    source = "../../child_modules/azurerm_virtual_network"
+    vnets = {
+      vnet1 = {
+        name = "Virtual_Network"
+        resource_group_name = "resource_group_dev_01_Canadacentral"
+        location = "Canadacentral"
+        address_space = ["10.0.0.0/16"]
+      }
+    }
+}
 
 # module "subnet" {
 #     depends_on = [ module.resource_group , module.virtual_network ]

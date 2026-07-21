@@ -1,109 +1,69 @@
-resource "azurerm_virtual_network_peering" "peering1" {
+resource "azurerm_virtual_network_peering" "peering" {
   for_each                  = var.peering
-  name                      = "Vnet1to2"
+  name                      = each.value.peering_name
   resource_group_name       = azurerm_resource_group.rg[each.value.rg_key].name
   virtual_network_name      = azurerm_virtual_network.vnet[each.value.vnet_key].name
-  remote_virtual_network_id = azurerm_virtual_network.vnet[each.value.remote_vnet].id
+  remote_virtual_network_id = azurerm_virtual_network.vnet[each.value.remote_vnet_key].id
 }
 
-resource "azurerm_virtual_network_peering" "peering2" {
-  for_each                  = var.peering
-  name                      = "Vnet2to1"
-  resource_group_name       = azurerm_resource_group.rg[each.value.rg_key1].name
-  virtual_network_name      = azurerm_virtual_network.vnet[each.value.vnet_key1].name
-  remote_virtual_network_id = azurerm_virtual_network.vnet[each.value.remote_vnet1].id
-}
+##############################################################################################################
 
-###################################################################################################
-
-resource "azurerm_subnet" "bastionsubnet" {
-  for_each             = var.bastion_subnet
-  name                 = each.value.bastion_subnet_name
-  resource_group_name  = azurerm_resource_group.rg[each.value.rg_key].name
-  virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_key].name
-  address_prefixes     = ["10.56.3.0/24"]
-}
-
-resource "azurerm_bastion_host" "bastion" {
-  depends_on          = [azurerm_subnet.bastionsubnet]
-  for_each            = var.bastion
-  name                = each.value.bastion_name
-  location            = azurerm_resource_group.rg[each.value.rg_key].location
-  resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
-
-  ip_configuration {
-    name                 = each.value.bastion_ip_configuration
-    subnet_id            = azurerm_subnet.bastionsubnet[each.value.subnet_key].id
-    public_ip_address_id = azurerm_public_ip.public_ip[each.value.pip_key].id
-  }
-}
-#############################################################################################
-
-resource "azurerm_network_security_group" "nsg" {
-  for_each            = var.nsg
-  name                = each.value.nsg_name
-  location            = azurerm_resource_group.rg[each.value.rg_key].location
-  resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
-
-  security_rule {
-    name                       = each.value.security_rule_name
-    priority                   = 100
-    direction                  = each.value.direction #"Inbound"
-    access                     = each.value.access    #"Allow"
-    protocol                   = each.value.protocol  #"Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
-
-########################################################################################
-
-resource "azurerm_virtual_machine" "vm" {
-  for_each              = var.vm
-  name                  = each.value.vm_name
-  location              = azurerm_virtual_network.vnet[each.value.vnet_key].location
-  resource_group_name   = azurerm_resource_group.rg[each.value.rg_key].name
-  network_interface_ids = [azurerm_network_interface.nic[each.value.nic_key].id]
-  vm_size               = each.value.vm_size
-
-  # Uncomment this line to delete the OS disk automatically when deleting the VM
-  delete_os_disk_on_termination = each.value.os_disk_termination #true
-
-  # Uncomment this line to delete the data disks automatically when deleting the VM
-  delete_data_disks_on_termination = each.value.data_disk_termination #true
-
-  storage_image_reference {
-    publisher = each.value.publisher #"Canonical"
-    offer     = each.value.offer     #"0001-com-ubuntu-server-jammy"
-    sku       = each.value.sku       #"22_04-lts"
-    version   = "latest"
-  }
-  storage_os_disk {
-    name              = each.value.os_disk_name
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-  os_profile {
-    computer_name  = each.value.computer_name  #"hostname"
-    admin_username = each.value.admin_username #"testadmin"
-    admin_password = each.value.admin_password #"Password1234!"
-  }
-  os_profile_linux_config {
-    disable_password_authentication = each.value.os_profile_linux_config #false
-  }
-}
-
-####################################################################################################
-
-resource "azurerm_public_ip" "public_ip" {
-  for_each            = var.pip
-  name                = each.value.pip_name
+resource "azurerm_linux_virtual_machine" "linux_vm" {
+  for_each            = var.linux_vm
+  name                = each.value.vm_name
   resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
   location            = azurerm_virtual_network.vnet[each.value.vnet_key].location
+  size                = each.value.size     #"Standard_F2"
+  admin_username      = each.value.username #"adminuser"   #os_profile
+  admin_password      = each.value.password
+  network_interface_ids = [
+    azurerm_network_interface.nic[each.value.nic_key].id,
+  ]
+  disable_password_authentication = each.value.disable_password_authentication
+
+  # admin_ssh_key {
+  #   username   = "adminuser"
+  #   public_key = file("~/.ssh/id_rsa.pub")
+  # }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
+}
+
+
+############################################################################################
+
+# resource "azurerm_public_ip" "public_ip" {
+#   for_each            = var.pip
+#   name                = each.value.pip_name
+#   resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
+#   location            = azurerm_virtual_network.vnet[each.value.vnet_key].location
+#   allocation_method   = "Static"
+# }
+
+resource "azurerm_public_ip" "lb_ip" {
+  for_each            = var.lb_pip
+  name                = each.value.lb_pip_name #"PublicIPForLB"
+  location            = azurerm_virtual_network.vnet[each.value.vnet_key].location
+  resource_group_name = azurerm_resource_group.rg[each.value.rg_key].name
   allocation_method   = "Static"
+}
+
+resource "azurerm_subnet" "bastion_subnet" {
+  for_each             = var.bastion_subnet
+  name                 = "AzureBastionSubnet"
+  resource_group_name  = azurerm_resource_group.rg[each.value.rg_key].name
+  virtual_network_name = azurerm_virtual_network.vnet[each.value.vnet_key].name
+  address_prefixes     = each.value.address_prefixes
 }
 
 
@@ -145,24 +105,24 @@ resource "azurerm_virtual_network" "vnet" {
 
 ######################################################################################
 
-resource "azurerm_storage_container" "blob1" {
-
-  for_each              = var.blob
-  name                  = each.value.blob_name
-  storage_account_id    = azurerm_storage_account.stg[each.value.stg_key].id
-  container_access_type = "private"
-}
+# resource "azurerm_storage_container" "blob1" {
+#   depends_on            = [azurerm_storage_account.stg]
+#   for_each              = var.blob
+#   name                  = each.value.blob_name
+#   storage_account_id    = azurerm_storage_account.stg[each.value.stg_key].id
+#   container_access_type = "private"
+# }
 
 ###############################################################################
 
-resource "azurerm_storage_account" "stg" {
-  for_each                 = var.stg
-  name                     = each.value.stg_name
-  resource_group_name      = azurerm_resource_group.rg[each.value.rg_key].name
-  location                 = each.value.location
-  account_tier             = each.value.account_tier
-  account_replication_type = each.value.account_replication_type
-}
+# resource "azurerm_storage_account" "stg" {
+#   for_each                 = var.stg
+#   name                     = each.value.stg_name
+#   resource_group_name      = azurerm_resource_group.rg[each.value.rg_key].name
+#   location                 = each.value.location
+#   account_tier             = each.value.account_tier
+#   account_replication_type = each.value.account_replication_type
+# }
 
 ###################################################################################
 resource "azurerm_resource_group" "rg" {
@@ -170,4 +130,3 @@ resource "azurerm_resource_group" "rg" {
   name     = each.value.rg_name
   location = each.value.rg_location
 }
-

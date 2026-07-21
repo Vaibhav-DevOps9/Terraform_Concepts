@@ -12,29 +12,34 @@ variable "nsg" {
 
 ##########################################################################
 
-variable "vm" {
-  description = "Virtual Machine"
-  type = map(object({
-    vm_name                 = string
-    vnet_key                = string
-    rg_key                  = string
-    nic_key                 = string
-    vm_size                 = string
-    publisher               = string
-    offer                   = string
-    sku                     = string
-    os_disk_name            = string
-    computer_name           = string
-    admin_username          = string
-    admin_password          = string
-    os_disk_termination     = bool
-    data_disk_termination   = bool
-    os_profile_linux_config = bool
 
+variable "peering" {
+  description = "Vnet Peering"
+  type = map(object({
+    peering_name    = string
+    rg_key          = string
+    vnet_key        = string
+    remote_vnet_key = string
   }))
 }
 
-##############################################################################
+##################################################################
+
+variable "linux_vm" {
+  description = "Linux Virtual Machine"
+  type = map(object({
+    vm_name                         = string
+    rg_key                          = string
+    vnet_key                        = string
+    size                            = string
+    username                        = string
+    password                        = string
+    nic_key                         = string
+    disable_password_authentication = bool
+  }))
+}
+
+############################################################
 
 variable "pip" {
   description = "Public Ip allocated to VM"
@@ -43,6 +48,17 @@ variable "pip" {
     rg_key   = string
     vnet_key = string
   }))
+}
+
+variable "lb_pip" {
+  description = "Public IP allocated to Load Balancer"
+  type = map(object({
+    lb_pip_name = string
+    rg_key      = string
+    vnet_key    = string
+
+  }))
+
 }
 
 ###################################################################
