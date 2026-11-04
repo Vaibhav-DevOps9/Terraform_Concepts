@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Verify Windows Runner
-        shell: powershell
+        shell: powershell -ExecutionPolicy Bypass {0}
         run: |
           Write-Host "Hello from my Windows Self-Hosted Runner!"
           Write-Host "Computer Name: $env:COMPUTERNAME"
