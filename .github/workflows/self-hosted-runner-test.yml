@@ -2,6 +2,10 @@
 name: Self Hosted Runner Test
 
 on:
+  push:
+    branches:
+      - feature/github_actions
+
   workflow_dispatch:
 
 jobs:
@@ -10,9 +14,9 @@ jobs:
 
     steps:
       - name: Verify Windows Runner
+        shell: powershell
         run: |
           Write-Host "Hello from my Windows Self-Hosted Runner!"
           Write-Host "Computer Name: $env:COMPUTERNAME"
           Write-Host "PowerShell Version:"
           $PSVersionTable.PSVersion
-        shell: powershell
