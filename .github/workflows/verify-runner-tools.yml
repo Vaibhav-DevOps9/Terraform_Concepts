@@ -15,23 +15,23 @@ jobs:
 
     steps:
       - name: Verify Windows Runner
-        shell: powershell
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
         run: |
           Write-Host "Runner: $env:COMPUTERNAME"
           whoami
 
       - name: Verify Terraform
-        shell: powershell
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
         run: terraform --version
 
       - name: Verify tfsec
-        shell: powershell
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
         run: tfsec --version
 
       - name: Verify TFLint
-        shell: powershell
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
         run: tflint --version
 
       - name: Verify Infracost
-        shell: powershell
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
         run: infracost --version
