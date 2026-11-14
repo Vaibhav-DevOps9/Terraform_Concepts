@@ -1,0 +1,58 @@
+
+name: Terraform DevSecOps CI Pipeline
+
+on:
+  push:
+    branches:
+      - feature/github_actions
+
+  pull_request:
+    branches:
+      - feature/github_actions
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-devsecops:
+    name: Terraform DevSecOps Validation
+
+    runs-on: [self-hosted, Windows, X64]
+
+    defaults:
+      run:
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ". '{0}'"
+        working-directory: "terraform modules with Data Block and Key Vault and security tools with Github Actions workflow/root/dev"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Runner Tools
+        run: |
+          terraform --version
+          tfsec --version
+          tflint --version
+          infracost --version
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform init -input=false -no-color
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: tfsec Security Scan
+        run: tfsec . --no-color
+
+      - name: TFLint
+        run: tflint --recursive
+
+      - name: Infracost Cost Estimation
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+        run: infracost breakdown --path=. --format=table
