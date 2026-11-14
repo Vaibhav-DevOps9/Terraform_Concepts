@@ -1,0 +1,22 @@
+
+name: Self Hosted Runner Test
+
+on:
+  push:
+    branches:
+      - feature/github_actions
+
+  workflow_dispatch:
+
+jobs:
+  runner-test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Verify Windows Runner
+        shell: powershell -ExecutionPolicy Bypass {0}
+        run: |
+          Write-Host "Hello from my Windows Self-Hosted Runner!"
+          Write-Host "Computer Name: $env:COMPUTERNAME"
+          Write-Host "PowerShell Version:"
+          $PSVersionTable.PSVersion

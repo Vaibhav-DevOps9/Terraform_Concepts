@@ -1,0 +1,37 @@
+
+name: Verify Runner Tools
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/github_actions
+    paths:
+      - ".github/workflows/verify-runner-tools.yml"
+
+jobs:
+  verify-tools:
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - name: Verify Windows Runner
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
+        run: |
+          Write-Host "Runner: $env:COMPUTERNAME"
+          whoami
+
+      - name: Verify Terraform
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
+        run: terraform --version
+
+      - name: Verify tfsec
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
+        run: tfsec --version
+
+      - name: Verify TFLint
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
+        run: tflint --version
+
+      - name: Verify Infracost
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass {0}
+        run: infracost --version
